@@ -1,7 +1,6 @@
 class MoviesController < ApplicationController
 
   def initialize
-    puts "calling MoviesController.initialize"
     super
     @all_ratings = Movie.all_ratings
     @filter = Hash.new
@@ -15,32 +14,46 @@ class MoviesController < ApplicationController
   end
 
   def index
-    puts "calling MoviesController.index"
-    puts "params = "
-    puts params.inspect
-    @sort = params[:sort]
-    ratings = params[:ratings]
-    if ratings == nil
-      puts "ratings == nil => all movies"
-      movies = Movie.all
-    else
-      puts "ratings NOT nil => filtered movies"
-      puts "ratings.keys = "
-      puts ratings.keys
-      @filter = ratings
-      movies = Movie.filter_by_ratings(ratings.keys)
+    redirect = false
+    # if one of them is null, and if it is not null in session, then redirect
+    # first for :ratings
+    if params[:ratings] == nil and session[:ratings] != nil
+      params[:ratings] = session[:ratings]
+      redirect = true
     end
-    if @sort == 'by_title'
-      @movies = movies.sort { |a,b| a.title <=> b.title }
-    elsif @sort == 'by_release_date'
-      @movies = movies.sort_by &:release_date    
-    else
-      @movies = movies
+    
+    # second for :sort
+    if params[:sort] == nil and session[:sort] != nil
+      params[:sort] = session[:sort]
+      redirect = true
     end
-    puts "@filter = "
-    puts @filter.inspect
-    puts "@all_ratings = "
-    puts @all_ratings.inspect
+    
+    if redirect
+      # redirect with the params updated from the session
+      redirect_to movies_path(params)
+    else
+      # update the session with the new params
+      session[:sort] = params[:sort]
+      session[:ratings] = params[:ratings]
+
+      # filter if needed
+      if params[:ratings] == nil
+        movies = Movie.all
+      else
+        @filter = params[:ratings]
+        movies = Movie.filter_by_ratings(params[:ratings].keys)
+      end
+
+      # sort if needed
+      @sort = params[:sort]
+      if @sort == 'by_title'
+        @movies = movies.sort { |a,b| a.title <=> b.title }
+      elsif @sort == 'by_release_date'
+        @movies = movies.sort_by &:release_date    
+      else
+        @movies = movies
+      end
+    end
   end
 
   def new
