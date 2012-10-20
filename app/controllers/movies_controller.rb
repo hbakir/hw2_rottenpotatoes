@@ -8,6 +8,7 @@ class MoviesController < ApplicationController
 
   def index
     @sort = params[:sort]
+    @all_ratings = Movie.all_ratings
     if @sort == 'by_title'
       @movies = Movie.all.sort { |a,b| a.title <=> b.title }
     elsif @sort == 'by_release_date'
