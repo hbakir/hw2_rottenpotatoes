@@ -30,6 +30,8 @@ class MoviesController < ApplicationController
     
     if redirect
       # redirect with the params updated from the session
+      # but persist the flash just in case there is something in it
+      flash.keep
       redirect_to movies_path(params)
     else
       # update the session with the new params
